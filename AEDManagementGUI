@@ -1,0 +1,187 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class AEDManagementGUI {
+    private JFrame frame;
+    private JTextArea textArea;
+    private JTextField searchField; // 검색어를 입력받는 텍스트 필드
+    private AEDDatabaseConnection dbConn;
+
+    public AEDManagementGUI() {
+        frame = new JFrame("AED Management System");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(800, 600);
+
+        textArea = new JTextArea();
+        JScrollPane scrollPane = new JScrollPane(textArea);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new GridLayout(3, 4));
+
+        dbConn = new AEDDatabaseConnection();
+
+        // 검색 필드와 검색 버튼 생성
+        searchField = new JTextField(20);
+        JButton searchButton = new JButton("검색");
+        searchButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String searchText = searchField.getText();
+                String searchResult = dbConn.searchAEDByID(searchText);
+                textArea.append(searchResult);
+            }
+        });
+
+        JPanel searchPanel = new JPanel();
+        searchPanel.add(searchField);
+        searchPanel.add(searchButton);
+
+        frame.getContentPane().add(searchPanel, BorderLayout.NORTH);
+
+        String[] buttons = {"AED 등록", "AED 관리", "유지보수", "재고 관리", "AED 추적", "데이터 분석", "인터페이스 설정",
+                "유저 관리", "재고 주문", "알림 관리", "보고서 생성", "시스템 설정"};
+
+        for (String buttonName : buttons) {
+            final String finalButtonName = buttonName;
+            JButton button = new JButton(finalButtonName);
+            button.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    switch (finalButtonName) {
+                        case "AED 등록":
+                        case "AED 관리":
+                        	String table = JOptionPane.showInputDialog("업데이트할 테이블 이름을 입력");
+                            String column = JOptionPane.showInputDialog("업데이트할 컬럼 이름을 입력");
+                            String newValue = JOptionPane.showInputDialog("새로운 값을 입력");
+                            String condition = JOptionPane.showInputDialog("업데이트할 행의 조건을 입력");
+                            dbConn.updateData(table, column, newValue, condition);
+                            textArea.append(dbConn.getAEDData());
+                            break;
+                        case "유지보수":
+                            textArea.append(dbConn.getMaintenanceRecordData());
+                            break;
+                        case "유저 관리":
+                            textArea.append(dbConn.getUserData());
+                            break;
+                        case "재고 관리":
+                            textArea.append(dbConn.getInventoryData());
+                            break;
+                        case "AED 추적":
+                            textArea.append(dbConn.getLocationData());
+                            break;
+                        case "데이터 분석":
+                            textArea.append(dbConn.getAlertData());
+                            break;
+                        case "인터페이스 설정":
+                            textArea.append(dbConn.getReportData());
+                            break;
+                        case "재고 주문":
+                            textArea.append(dbConn.getUsageHistoryData());
+                            break;
+                        case "알림 관리":
+                            textArea.append(dbConn.getConsumableData());
+                            break;
+                        case "보고서 생성":
+                            textArea.append(dbConn.getInspectionGuidelineData());
+                            break;
+                        case "시스템 설정":
+                            textArea.append(dbConn.getStorageStatusData());
+                            break;
+                        default:
+                            textArea.append(buttonName + " 기능이 선택되었습니다.");
+                            break;
+                        
+                    	}
+                    }
+                });
+                buttonPanel.add(button);
+            }
+
+            frame.getContentPane().add(scrollPane, BorderLayout.CENTER);
+            frame.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+        }
+
+        public void show() {
+            frame.setVisible(true);
+        }
+
+        public class Login {
+            private SuccessHandler successHandler;
+            private AEDDatabaseConnection dbConn;
+
+            public interface SuccessHandler {
+                void onSuccess();
+            }
+
+            public Login(SuccessHandler successHandler) {
+                this.successHandler = successHandler;
+                this.dbConn = new AEDDatabaseConnection();
+            }
+
+            public void show() {
+                JFrame loginFrame = new JFrame("Login");
+                loginFrame.setSize(300, 200);
+                loginFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+                JPanel panel = new JPanel();
+                loginFrame.add(panel);
+                placeComponents(panel);
+
+                loginFrame.setVisible(true);
+            }
+
+            private void placeComponents(JPanel panel) {
+                panel.setLayout(null);
+
+                JLabel userLabel = new JLabel("User");
+                userLabel.setBounds(10, 20, 80, 25);
+                panel.add(userLabel);
+
+                JTextField userText = new JTextField(20);
+                userText.setBounds(100, 20, 165, 25);
+                panel.add(userText);
+
+                JLabel passwordLabel = new JLabel("Password");
+                passwordLabel.setBounds(10, 50, 80, 25);
+                panel.add(passwordLabel);
+
+                JPasswordField passwordText = new JPasswordField(20);
+                passwordText.setBounds(100, 50, 165, 25);
+                panel.add(passwordText);
+
+                JButton loginButton = new JButton("login");
+                loginButton.setBounds(10, 80, 80, 25);
+                panel.add(loginButton);
+
+                loginButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        String user = userText.getText();
+                        String password = new String(passwordText.getPassword());
+                        if (dbConn.checkCredentials(user, password)) {
+                            successHandler.onSuccess();
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Invalid credentials. Please try again.");
+                        }
+                    }
+                });
+            }
+        } // Login 클래스 끝
+
+        public static void main(String[] args) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    AEDManagementGUI gui = new AEDManagementGUI();
+                    Login login = gui.new Login(new Login.SuccessHandler() {
+                        @Override
+                        public void onSuccess() {
+                            gui.show();
+                        }
+                    });
+                    login.show();
+                }
+            });
+        }
+    }
