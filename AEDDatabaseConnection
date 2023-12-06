@@ -1,0 +1,146 @@
+import java.sql.*;
+
+public class AEDDatabaseConnection {
+    private static final String DATABASE_URL = "jdbc:oracle:thin:@localhost:1521:xe";
+    private static final String DATABASE_USERNAME = "jsw98u";
+    private static final String DATABASE_PASSWORD = "@ehdtmddnjs12";
+    private Connection conn;
+    
+    public AEDDatabaseConnection() {
+        try {
+            Class.forName("oracle.jdbc.driver.OracleDriver");
+            conn = DriverManager.getConnection(DATABASE_URL, DATABASE_USERNAME, DATABASE_PASSWORD);
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public boolean checkCredentials(String username, String password) {
+        try {
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM Users WHERE username = ? AND password = ?");
+            pstmt.setString(1, username);
+            pstmt.setString(2, password);
+            ResultSet result = pstmt.executeQuery();
+            return result.next();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public String getAEDData() {
+        String sql = "SELECT * FROM AEDs";
+        return executeQuery(sql);
+    }
+
+    public String getModelData() {
+        String sql = "SELECT * FROM Models";
+        return executeQuery(sql);
+    }
+
+    public String getMaintenanceRecordData() {
+        String sql = "SELECT * FROM Maintenance_Records";
+        return executeQuery(sql);
+    }
+
+    public String getUserData() {
+        String sql = "SELECT * FROM Users";
+        return executeQuery(sql);
+    }
+
+    public String getLocationData() {
+        String sql = "SELECT * FROM Locations";
+        return executeQuery(sql);
+    }
+
+    public String getAlertData() {
+        String sql = "SELECT * FROM Alerts";
+        return executeQuery(sql);
+    }
+
+    public String getInventoryData() {
+        String sql = "SELECT * FROM Inventory";
+        return executeQuery(sql);
+    }
+
+    public String getReportData() {
+        String sql = "SELECT * FROM Reports";
+        return executeQuery(sql);
+    }
+
+    public String getUsageHistoryData() {
+        String sql = "SELECT * FROM Usage_History";
+        return executeQuery(sql);
+    }
+
+    public String getConsumableData() {
+        String sql = "SELECT * FROM Consumables";
+        return executeQuery(sql);
+    }
+
+    public String getInspectionGuidelineData() {
+        String sql = "SELECT * FROM Inspection_Guidelines";
+        return executeQuery(sql);
+    }
+
+    public String getStorageStatusData() {
+        String sql = "SELECT * FROM Storage_Status";
+        return executeQuery(sql);
+    }
+
+    private String executeQuery(String sql) {
+        try (Statement statement = conn.createStatement()){
+            ResultSet result = statement.executeQuery(sql);
+
+            StringBuilder sb = new StringBuilder();
+            while(result.next()) {
+                ResultSetMetaData metaData = result.getMetaData();
+                int columnCount = metaData.getColumnCount();
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = metaData.getColumnName(i);
+                    String value = result.getString(columnName);
+                    sb.append(columnName).append(": ").append(value).append("");
+                }
+                sb.append("");
+            }
+            return sb.toString();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error retrieving data.";
+        }
+    }
+
+    public String searchAEDByID(String AED_ID) {
+        try {
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM AEDs WHERE AED_ID = ?");
+            pstmt.setString(1, AED_ID);
+            ResultSet result = pstmt.executeQuery();
+            
+            StringBuilder sb = new StringBuilder();
+            while(result.next()) {
+                ResultSetMetaData metaData = result.getMetaData();
+                int columnCount = metaData.getColumnCount();
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = metaData.getColumnName(i);
+                    String value = result.getString(columnName);
+                    sb.append(columnName).append(": ").append(value).append("");
+                }
+            }
+            return sb.toString();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error retrieving data.";
+        }
+    }
+
+    public void updateData(String table, String column, String newValue, String condition) {
+        try {
+            String sql = "UPDATE " + table + " SET " + column + " = ? WHERE " + condition;
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, newValue);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
